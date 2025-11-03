@@ -6,20 +6,24 @@ import numpy as np
 
 DATASET_PATH = "./datasets"
 
-def project_2d(bbox_3d: np.array, P: np.array):
-  N = bbox_3d.shape[0]
-  ones = np.ones((N, 1))
-  coords_3d = np.hstack((bbox_3d, ones))
+def project_2d(
+  bbox_3d: np.array,
+  # P: np.array
+):
   
-  projection = (P @ coords_3d.T).T
+  # N = bbox_3d.shape[0]
+  # ones = np.ones((N, 1))
+  # coords_3d = np.hstack((bbox_3d, ones))
   
-  x = projection[:, 0] / projection[:, 2]
-  y = projection[:, 1] / projection[:, 2]
+  # projection = (P @ coords_3d.T).T
+  
+  # x = projection[:, 0] / projection[:, 2]
+  # y = projection[:, 1] / projection[:, 2]
 
-  xmin = np.min(x)
-  xmax = np.max(x)
-  ymin = np.min(y)
-  ymax = np.max(y)
+  xmin = np.min(bbox_3d[:, 0])
+  xmax = np.max(bbox_3d[:, 0])
+  ymin = np.min(bbox_3d[:, 1])
+  ymax = np.max(bbox_3d[:, 1])
 
   return xmin, xmax, ymin, ymax
 
@@ -43,7 +47,7 @@ for path in tqdm(os.listdir(DATASET_PATH)):
     new_label_dir = f"{DATASET_PATH}/{path}/_new_labels/{dir_name}"
     os.makedirs(new_label_dir, exist_ok=True)
     
-    calibration_path = f"{DATASET_PATH}/{path}/_calibration"
+    calibration_path = f"{DATASET_PATH}/{path}/_calibration/{dir_name}.json"
     calibration_obj = json.load(open(calibration_path, "r"))
     
     for label_name in os.listdir(f"{label_path}/{dir_name}"):
@@ -84,8 +88,8 @@ for path in tqdm(os.listdir(DATASET_PATH)):
             category_id += 1
             
           xmin, xmax, ymin, ymax = project_2d(
-            np.array(label["box3d_projected"]),
-            np.array(calibration_obj["projection_matrix"])
+            np.array(list(label["box3d_projected"].values())),
+            # np.array(calibration_obj["projection_matrix"])
           )
           bbox = [float(xmin), float(ymin), float(xmax - xmin), float(ymax - ymin)]
           
