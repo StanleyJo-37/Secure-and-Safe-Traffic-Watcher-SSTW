@@ -1,1 +1,3 @@
 .env
+# Ignore the datasets directory at repository root
+/datasets/
