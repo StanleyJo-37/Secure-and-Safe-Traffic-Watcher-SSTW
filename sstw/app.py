@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, send_file, jsonify
+from flask_cors import CORS
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
@@ -8,9 +9,21 @@ import numpy as np
 import io
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 app.config['MAX_CONTENT_LENGTH'] = 512 * 1024 * 1024  # 512MB max (adjust if needed)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Fake mock analysis data
+MOCK_ANALYSIS = {
+    "safety_score": 85,
+    "traffic_density": "Medium",
+    "violations_detected": 2,
+    "details": [
+        {"timestamp": "00:05", "type": "Speeding", "severity": "High"},
+        {"timestamp": "00:12", "type": "Illegal Lane Change", "severity": "Medium"}
+    ]
+}
 
 # Model settings
 MODEL_PATH = 'model.pt'  # put your .pt file here or change this path
@@ -101,7 +114,13 @@ def process_image():
         cv2.imwrite(result_path, result_img)
         return jsonify({'success': True})
     except Exception as e:
+        print(f"Error processing image: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/analysis_result', methods=['GET'])
+def get_analysis_result():
+    # In a real app, this would return data specific to the processed video
+    return jsonify(MOCK_ANALYSIS)
 
 @app.route('/result_image')
 def get_result_image():
