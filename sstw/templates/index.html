@@ -1,217 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SSTW</title>
+    <meta charset="utf-8">
+    <title>Video/ Image Model Processor</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        .upload-section {
-            border: 2px dashed #ccc;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            background-color: #fafafa;
-        }
-        .upload-section:hover {
-            background-color: #f0f0f0;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .results {
-            margin-top: 30px;
-            display: none;
-        }
-        .image-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .image-box {
-            text-align: center;
-        }
-        .image-box img {
-            max-width: 400px;
-            max-height: 400px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4CAF50;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .error {
-            color: #d32f2f;
-            padding: 10px;
-            background-color: #ffebee;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        .warning {
-            color: #f57c00;
-            padding: 10px;
-            background-color: #fff3e0;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      .box { background:#fff; padding:16px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); max-width:900px; }
+      .row { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+      .col { flex:1 1 300px; }
+      .preview { max-width:100%; border:1px solid #ddd; border-radius:6px; }
+      button { padding:8px 12px; cursor:pointer; }
+      .warning { background:#fff4e5; padding:8px; border-radius:6px; color:#7a4a00; margin-bottom:12px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>SSTW</h1>
-        
-        {% if not model_loaded %}
-        <div class="warning">
-            ⚠️ Model not loaded. Please place your .pt model file in the app directory and name it 'model.pt', or update the MODEL_PATH in app.py.
+  <div class="box">
+    <h2>Model Processor</h2>
+
+    {% if not model_loaded %}
+    <div class="warning">⚠️ Model not loaded. Put your `.pt` file as `model.pt` or update `MODEL_PATH` in `app.py`.</div>
+    {% endif %}
+
+    <div class="row">
+      <div class="col">
+        <h3>Image</h3>
+        <input type="file" id="imgFile" accept="image/*"><br><br>
+        <button id="btnImg">Process Image</button>
+        <div style="margin-top:12px;">
+          <img id="imgPreview" class="preview" src="" alt="" />
         </div>
-        {% endif %}
-        
-        <div class="upload-section" id="uploadArea">
-            <h3>Upload an Image</h3>
-            <p>Click to select or drag and drop an image</p>
-            <input type="file" id="fileInput" accept="image/*">
-            <button onclick="document.getElementById('fileInput').click()">Select Image</button>
+      </div>
+
+      <div class="col">
+        <h3>Video</h3>
+        <input type="file" id="videoFile" accept="video/*"><br><br>
+        <button id="btnVid">Process Video</button>
+        <div style="margin-top:12px;">
+          <video id="videoPreview" class="preview" controls></video>
         </div>
-        
-        <div id="errorMsg" class="error" style="display:none;"></div>
-        
-        <div class="loading" id="loading">
-            <p>Processing image...</p>
-            <div class="spinner"></div>
-        </div>
-        
-        <div class="results" id="results">
-            <h2>Results</h2>
-            <div class="image-container">
-                <div class="image-box">
-                    <h3>Original Image</h3>
-                    <img id="inputImage" src="" alt="Input">
-                </div>
-                <div class="image-box">
-                    <h3>Processed Image</h3>
-                    <img id="outputImage" src="" alt="Output">
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <script>
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const loading = document.getElementById('loading');
-        const results = document.getElementById('results');
-        const errorMsg = document.getElementById('errorMsg');
+    <div style="margin-top:20px;">
+      <h3>Results</h3>
+      <div class="row">
+        <div class="col">
+          <h4>Image Output</h4>
+          <img id="imgOutput" class="preview" src="" alt="" />
+        </div>
+        <div class="col">
+          <h4>Video Output</h4>
+          <video id="videoOutput" class="preview" controls></video>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.backgroundColor = '#e0e0e0';
-        });
+<script>
+const imgFile = document.getElementById('imgFile');
+const videoFile = document.getElementById('videoFile');
+const btnImg = document.getElementById('btnImg');
+const btnVid = document.getElementById('btnVid');
+const imgPreview = document.getElementById('imgPreview');
+const imgOutput = document.getElementById('imgOutput');
+const videoPreview = document.getElementById('videoPreview');
+const videoOutput = document.getElementById('videoOutput');
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.backgroundColor = '#fafafa';
-        });
+imgFile.addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  imgPreview.src = URL.createObjectURL(f);
+});
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.backgroundColor = '#fafafa';
-            fileInput.files = e.dataTransfer.files;
-            handleFileSelect();
-        });
+videoFile.addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  videoPreview.src = URL.createObjectURL(f);
+});
 
-        fileInput.addEventListener('change', handleFileSelect);
+btnImg.addEventListener('click', () => {
+  const f = imgFile.files[0];
+  if (!f) { alert('Select an image first'); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  btnImg.disabled = true;
+  btnImg.textContent = 'Processing...';
+  fetch('/process_image', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      btnImg.disabled = false;
+      btnImg.textContent = 'Process Image';
+      if (data.success) {
+        imgOutput.src = '/result_image?t=' + Date.now();
+      } else {
+        alert('Error: ' + (data.error || 'unknown'));
+      }
+    }).catch(e => { btnImg.disabled=false; btnImg.textContent='Process Image'; alert(e); });
+});
 
-        function handleFileSelect() {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            // Show original image preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('inputImage').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-
-            // Process image
-            processImage(file);
-        }
-
-        function processImage(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            loading.style.display = 'block';
-            results.style.display = 'none';
-            errorMsg.style.display = 'none';
-
-            fetch('/process', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                loading.style.display = 'none';
-                if (data.success) {
-                    // Add timestamp to bust cache
-                    document.getElementById('outputImage').src = '/result?t=' + new Date().getTime();
-                    results.style.display = 'block';
-                } else {
-                    showError(data.error || 'An error occurred');
-                }
-            })
-            .catch(error => {
-                loading.style.display = 'none';
-                showError('Error: ' + error);
-            });
-        }
-
-        function showError(message) {
-            errorMsg.textContent = message;
-            errorMsg.style.display = 'block';
-        }
-    </script>
+btnVid.addEventListener('click', () => {
+  const f = videoFile.files[0];
+  if (!f) { alert('Select a video first'); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  btnVid.disabled = true;
+  btnVid.textContent = 'Processing (this may take time)...';
+  fetch('/process_video', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      btnVid.disabled = false;
+      btnVid.textContent = 'Process Video';
+      if (data.success) {
+        videoOutput.src = '/result_video?t=' + Date.now();
+      } else {
+        alert('Error: ' + (data.error || 'unknown'));
+      }
+    }).catch(e => { btnVid.disabled=false; btnVid.textContent='Process Video'; alert(e); });
+});
+</script>
 </body>
 </html>
