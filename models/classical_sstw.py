@@ -222,7 +222,7 @@ def train(
 			cls_loss = label_loss_fn(cls_logits.permute(0, 2, 1), target_labels)
 			reg_loss = bbox_deltas_loss_fn(bbox_deltas, target_bbox_deltas)
 			
-			loss = cls_loss + (10. * reg_loss)
+			loss = cls_loss + (5. * reg_loss)
 			
 			running_train_cls_loss += cls_loss.item()
 			running_train_reg_loss += reg_loss.item()
@@ -259,7 +259,7 @@ def train(
 				cls_loss = label_loss_fn(cls_logits.permute(0, 2, 1), target_labels)
 				reg_loss = bbox_deltas_loss_fn(bbox_deltas, target_bbox_deltas)
 				
-				loss = cls_loss + (10. * reg_loss)
+				loss = cls_loss + (5. * reg_loss)
 				
 				running_val_cls_loss += cls_loss.item()
 				running_val_reg_loss += reg_loss.item()
@@ -294,3 +294,5 @@ def train(
 		print(f"Epoch [{epoch+1}/{epochs}] - Average Validation Loss: {avg_val_loss:.2f}, Average Training Loss: {avg_train_loss:.2f}")
 
 	return best_model_params, cls_loss_history, reg_loss_history, loss_history, val_cls_loss_history, val_reg_loss_history, val_loss_history
+
+print('Imported!')
