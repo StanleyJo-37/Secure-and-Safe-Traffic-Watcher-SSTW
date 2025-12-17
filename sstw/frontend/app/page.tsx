@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, Video, AlertTriangle, CheckCircle, Clock, X } from "lucide-react";
+import { Upload, Video, Image, AlertTriangle, CheckCircle, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -28,22 +28,29 @@ const API_BASE = "http://localhost:5000";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<"video" | "image" | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resultImage, setResultImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
-    if (selectedFile && selectedFile.type.startsWith("video/")) {
+    const isVideo = selectedFile.type.startsWith("video/");
+    const isImage = selectedFile.type.startsWith("image/");
+    
+    if (selectedFile && (isVideo || isImage)) {
       setFile(selectedFile);
-      setVideoPreview(URL.createObjectURL(selectedFile));
+      setFilePreview(URL.createObjectURL(selectedFile));
+      setFileType(isVideo ? "video" : "image");
       setError(null);
+      setResultImage(null);
     } else {
-      setError("Please select a valid video file");
+      setError("Please select a valid video or image file");
     }
   }, []);
 
@@ -80,14 +87,17 @@ export default function Home() {
   );
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !fileType) return;
 
     setIsUploading(true);
     setUploadProgress(0);
     setError(null);
+    setResultImage(null);
 
     const formData = new FormData();
     formData.append("file", file);
+
+    const endpoint = fileType === "video" ? "/process_video" : "/process_image";
 
     try {
       // Simulate progress for better UX
@@ -101,7 +111,7 @@ export default function Home() {
         });
       }, 500);
 
-      const response = await fetch(`${API_BASE}/process_video`, {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
         method: "POST",
         body: formData,
       });
@@ -121,6 +131,11 @@ export default function Home() {
         setAnalysisResult(results);
         setShowResults(true);
       }
+
+      // For images, also fetch the result image
+      if (fileType === "image") {
+        setResultImage(`${API_BASE}/result_image?t=${Date.now()}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -130,9 +145,11 @@ export default function Home() {
 
   const resetUpload = () => {
     setFile(null);
-    setVideoPreview(null);
+    setFilePreview(null);
+    setFileType(null);
     setUploadProgress(0);
     setError(null);
+    setResultImage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -181,16 +198,16 @@ export default function Home() {
             Traffic Analysis
           </h2>
           <p className="mt-2 text-secondary-text">
-            Upload a video to analyze traffic patterns and detect violations
+            Upload a video or image to analyze traffic patterns and detect violations
           </p>
         </div>
 
         {/* Upload Card */}
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-base">Upload Video</CardTitle>
+            <CardTitle className="text-base">Upload Video or Image</CardTitle>
             <CardDescription>
-              Drag and drop a video file or click to browse
+              Drag and drop a video or image file, or click to browse
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -210,28 +227,36 @@ export default function Home() {
                   <Upload className="h-6 w-6 text-accent" />
                 </div>
                 <p className="mb-1 text-sm font-medium text-primary-text">
-                  Drop your video here
+                  Drop your file here
                 </p>
                 <p className="text-xs text-secondary-text">
-                  Supports MP4, MOV, AVI up to 512MB
+                  Supports MP4, MOV, AVI, JPG, PNG up to 512MB
                 </p>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="video/*"
+                  accept="video/*,image/*"
                   onChange={handleInputChange}
                   className="hidden"
                 />
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Video Preview */}
+                {/* File Preview */}
                 <div className="relative overflow-hidden rounded-xl bg-primary-text/5">
-                  <video
-                    src={videoPreview!}
-                    controls
-                    className="mx-auto max-h-[400px] w-full object-contain"
-                  />
+                  {fileType === "video" ? (
+                    <video
+                      src={filePreview!}
+                      controls
+                      className="mx-auto max-h-[400px] w-full object-contain"
+                    />
+                  ) : (
+                    <img
+                      src={filePreview!}
+                      alt="Preview"
+                      className="mx-auto max-h-[400px] w-full object-contain"
+                    />
+                  )}
                   <button
                     onClick={resetUpload}
                     className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary-text/80 text-white transition-colors hover:bg-primary-text"
@@ -243,13 +268,17 @@ export default function Home() {
                 {/* File Info */}
                 <div className="flex items-center justify-between rounded-lg bg-secondary-text/5 px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Video className="h-5 w-5 text-accent" />
+                    {fileType === "video" ? (
+                      <Video className="h-5 w-5 text-accent" />
+                    ) : (
+                      <Image className="h-5 w-5 text-accent" />
+                    )}
                     <div>
                       <p className="text-sm font-medium text-primary-text">
                         {file.name}
                       </p>
                       <p className="text-xs text-secondary-text">
-                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        {(file.size / (1024 * 1024)).toFixed(2)} MB · {fileType === "video" ? "Video" : "Image"}
                       </p>
                     </div>
                   </div>
@@ -291,7 +320,7 @@ export default function Home() {
                     ) : (
                       <>
                         <Upload className="h-4 w-4" />
-                        Analyze Video
+                        Analyze {fileType === "video" ? "Video" : "Image"}
                       </>
                     )}
                   </Button>
@@ -314,12 +343,23 @@ export default function Home() {
               Analysis Complete
             </DialogTitle>
             <DialogDescription>
-              Traffic analysis results for your uploaded video
+              Traffic analysis results for your uploaded {fileType === "video" ? "video" : "image"}
             </DialogDescription>
           </DialogHeader>
 
           {analysisResult && (
             <div className="space-y-6">
+              {/* Result Image (for image uploads) */}
+              {resultImage && (
+                <div className="overflow-hidden rounded-xl border border-secondary-text/10">
+                  <img
+                    src={resultImage}
+                    alt="Processed result"
+                    className="w-full object-contain"
+                  />
+                </div>
+              )}
+
               {/* Score Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="rounded-xl bg-secondary-text/5 p-4 text-center">

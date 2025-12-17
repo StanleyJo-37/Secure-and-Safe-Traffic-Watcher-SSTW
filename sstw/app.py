@@ -94,8 +94,14 @@ def process_image():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
 
+    # Save original image for reference
+    original_path = os.path.join(app.config['UPLOAD_FOLDER'], 'input_image.png')
+    
     try:
         image = Image.open(file.stream).convert('RGB')
+        # Save original
+        image.save(original_path)
+        
         input_tensor = preprocess(image).unsqueeze(0).to(device)
 
         with torch.no_grad():
@@ -110,9 +116,19 @@ def process_image():
             result_tensor = output
 
         result_img = postprocess_tensor(result_tensor)
+        
+        # Resize result image to match original dimensions
+        original_size = (image.width, image.height)
+        result_resized = cv2.resize(result_img, original_size, interpolation=cv2.INTER_LINEAR)
+        
         result_path = os.path.join(app.config['UPLOAD_FOLDER'], 'result.png')
-        cv2.imwrite(result_path, result_img)
-        return jsonify({'success': True})
+        cv2.imwrite(result_path, result_resized)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Image processed successfully',
+            'result_url': '/result_image'
+        })
     except Exception as e:
         print(f"Error processing image: {e}")
         return jsonify({'error': str(e)}), 500
