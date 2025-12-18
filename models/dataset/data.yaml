@@ -1,0 +1,6 @@
+path: /absolute/path/to/dataset # Optional: root dir
+train: train/images
+val: val/images
+
+nc: 3 # Number of classes
+names: ["car", "truck", "motorcycle"] # Class names
