@@ -70,6 +70,14 @@ def train_yolo_loop(
 
     return results
 
+def export_to_ncnn(model_path, output_path='model_ncnn'):
+    """Export the trained YOLO model to NCNN format."""
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model not found: {model_path}")
+    model = YOLO(model_path)
+    model.export(format='ncnn')
+    logging.info(f"Model exported to NCNN: {output_path}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YOLO Model Training Loop")
     
