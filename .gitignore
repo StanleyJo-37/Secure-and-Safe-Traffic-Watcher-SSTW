@@ -1,2 +1,3 @@
 .env
-/datasets/
+/**/datasets
+/**/a9_dataset
