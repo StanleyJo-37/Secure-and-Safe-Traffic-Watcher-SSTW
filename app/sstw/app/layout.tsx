@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/custom/navbar";
+import { Manrope } from "next/font/google";
 
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
   subsets: ["latin"],
-  display: "swap",
+  variable: "--font-manrope",
 });
 
 export const metadata: Metadata = {
@@ -19,8 +19,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${manrope.variable} font-sans antialiased`}>
+        <Navbar />
         {children}
       </body>
     </html>
