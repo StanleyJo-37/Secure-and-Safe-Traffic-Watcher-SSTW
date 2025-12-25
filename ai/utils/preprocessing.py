@@ -126,7 +126,7 @@ def ltp(img, k):
 	return np.concatenate([hist_upper, hist_lower])
 
 hog = cv2.HOGDescriptor((128, 64), (16, 16), (8, 8), (8, 8), 9)
-def extract_features(X, pca_path='outputs/hog_pca.joblib'):
+def extract_features(X, pca_path='./../outputs/hog_pca.joblib'):
 	# Get bounding boxes using Selective Search
 	selective_search = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
 	selective_search.setBaseImage(X)
@@ -203,4 +203,4 @@ def preprocess(img, foggy:bool=False):
 	
 	img_clahe = clahe.apply(img_gray_final)
 	
-	return img_clahe.astype(np.float32)
+	return img_clahe.astype(np.uint8)
