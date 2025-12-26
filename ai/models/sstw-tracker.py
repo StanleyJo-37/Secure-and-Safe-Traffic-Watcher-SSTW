@@ -1,15 +1,17 @@
-from classical_sstw import ClassicalSSTWModel
+
 from deep_sort_realtime.deepsort_tracker import DeepSort
 import torch
 import numpy as np
 import cv2
+from models.classical_model import ClassicDetector
+from ultralytics import YOLO
 
 class SSTWTracker():
   def __init__(
     self,
-    detector: torch.nn.Module=ClassicalSSTWModel
+    detector: ClassicDetector | YOLO
   ):
-    self.detector = detector
+    self.detector = detector()
     self.tracker = DeepSort()
 
     self.detector.eval()

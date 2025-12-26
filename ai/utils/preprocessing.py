@@ -180,7 +180,6 @@ def extract_features(X, pca_path='./../outputs/hog_pca.joblib'):
 	return np.array(boxes_list), np.array(features_list)
 
 def variance_of_laplacian(image):
-	'''Return average variance of horizontal lines of a grayscale image'''
 	return cv2.Laplacian(image, cv2.CV_64F).var()
 
 def is_foggy(image):

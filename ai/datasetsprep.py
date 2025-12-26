@@ -6,7 +6,6 @@ from utils.preprocessing import preprocess, project_2d, convert_to_yolo, ltp
 import random
 import joblib
 import pickle
-import sys
 
 random.seed(42)
 
@@ -55,11 +54,6 @@ def extract_features(img):
 	hog_feat = hog.compute(gray_image).flatten()
 	hog_feat = pca.transform(hog_feat.reshape(1, -1)).flatten()
 	feat.extend(hog_feat)
-
-	# HSV
-	# hsv_image = cv2.cvtColor(resized_img, cv2.COLOR_BGR2HSV)
-	# hsv_hist = cv2.calcHist([hsv_image], [0, 1], None, [30, 16], [0, 180, 0, 256]).flatten()
-	# feat.extend(hsv_hist)
 
 	# LTP
 	ltp_feat = ltp(gray_image, 10)
