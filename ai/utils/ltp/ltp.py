@@ -52,10 +52,9 @@ class LTP(object):
         center = img[i, j]
 
         center = int(center)
-        k = int(k)
 
-        lower_bound = max(0, center - k)
-        upper_bound = min(255, center + k)
+        lower_bound = max(0, center - self.k)
+        upper_bound = min(255, center + self.k)
 
         for dy, dx in offsets:
           val = img[i + dy, j + dx]

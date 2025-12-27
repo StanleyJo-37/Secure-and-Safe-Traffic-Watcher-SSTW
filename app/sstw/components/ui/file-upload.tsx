@@ -1,8 +1,11 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import { InputHTMLAttributes, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { IconUpload } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
+import { X } from "lucide-react";
 
 const mainVariant = {
   initial: {
@@ -27,16 +30,29 @@ const secondaryVariant = {
 
 export const FileUpload = ({
   onChange,
+  accept = "*",
+  type = "file",
 }: {
   onChange?: (files: File[]) => void;
+  accept: InputHTMLAttributes<HTMLInputElement>["accept"];
+  type?: InputHTMLAttributes<HTMLInputElement>["type"];
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (newFiles: File[]) => {
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    onChange && onChange(newFiles);
+    if (onChange) onChange(newFiles);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
+
+  useEffect(() => {
+    if (onChange) {
+      onChange(files);
+    }
+  }, [files, onChange]);
 
   const handleClick = () => {
     fileInputRef.current?.click();
@@ -51,21 +67,34 @@ export const FileUpload = ({
     },
   });
 
+  const handleRemove = (fileIndexToRemove: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updatedFiles = [
+      ...files.slice(0, fileIndexToRemove),
+      ...files.slice(fileIndexToRemove + 1),
+    ];
+
+    setFiles(updatedFiles);
+
+    if (onChange) onChange(updatedFiles);
+  };
+
   return (
     <div className="w-full" {...getRootProps()}>
       <motion.div
         onClick={handleClick}
         whileHover="animate"
-        className="p-10 group/file block rounded-lg cursor-pointer w-full relative overflow-hidden"
+        className="p-10 group/file block rounded-lg cursor-pointer w-full relative"
       >
         <input
           ref={fileInputRef}
           id="file-upload-handle"
-          type="file"
+          type={type}
+          accept={accept}
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
+        <div className="absolute inset-0 mask-[radial-gradient(ellipse_at_center,white,transparent)]">
           <GridPattern />
         </div>
         <div className="flex flex-col items-center justify-center">
@@ -82,10 +111,19 @@ export const FileUpload = ({
                   key={"file" + idx}
                   layoutId={idx === 0 ? "file-upload" : "file-upload-" + idx}
                   className={cn(
-                    "relative overflow-hidden z-40 bg-white dark:bg-neutral-900 flex flex-col items-start justify-start md:h-24 p-4 mt-4 w-full mx-auto rounded-md",
+                    "relative z-40 bg-white dark:bg-neutral-900 flex flex-col items-start justify-start md:h-24 p-4 mt-4 w-full mx-auto rounded-md",
                     "shadow-sm"
                   )}
                 >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.1 }}
+                    className="bg-red-500 rounded-full absolute z-50 -right-2 -top-2 p-1 cursor-pointer shadow-md"
+                    onClick={(e) => handleRemove(idx, e)}
+                  >
+                    <X className="text-white w-4 h-4" />
+                  </motion.div>
                   <div className="flex justify-between w-full items-center gap-4">
                     <motion.p
                       initial={{ opacity: 0 }}
@@ -136,7 +174,7 @@ export const FileUpload = ({
                   damping: 20,
                 }}
                 className={cn(
-                  "relative group-hover/file:shadow-2xl z-40 bg-white dark:bg-neutral-900 flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md",
+                  "relative group-hover/file:shadow-2xl z-40 bg-white dark:bg-neutral-900 flex items-center justify-center h-32 mt-4 w-full max-w-32 mx-auto rounded-md",
                   "shadow-[0px_10px_50px_rgba(0,0,0,0.1)]"
                 )}
               >
@@ -158,7 +196,7 @@ export const FileUpload = ({
             {!files.length && (
               <motion.div
                 variants={secondaryVariant}
-                className="absolute opacity-0 border border-dashed border-sky-400 inset-0 z-30 bg-transparent flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md"
+                className="absolute opacity-0 border border-dashed border-sky-400 inset-0 z-30 bg-transparent flex items-center justify-center h-32 mt-4 w-full max-w-32 mx-auto rounded-md"
               ></motion.div>
             )}
           </div>

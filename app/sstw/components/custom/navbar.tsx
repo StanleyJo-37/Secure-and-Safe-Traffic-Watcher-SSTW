@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export interface NavItem {
   label: string;
@@ -34,6 +35,10 @@ export const navItems: Array<NavItem> = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
+
+  if (pathname === "/demo") return <></>;
+
   return (
     <span className="flex flex-row items-center space-x-12 p-12 fixed left-auto right-16 z-50">
       {navItems.map((navItem, idx) => (

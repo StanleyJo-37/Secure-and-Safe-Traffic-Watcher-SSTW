@@ -6,13 +6,24 @@ import joblib
 from utils.dcp.haze_remover import HazeRemover
 from utils.ltp.ltp import LTP
 
+class Box():
+	def __init__(self, bbox, label, score):
+		self.xyxy = np.array([bbox])
+		self.conf = [score]
+		self.cls = [label]
+	
+class Result:
+	def __init__(self, boxes, labels, scores):
+		self.boxes = []
+
+		for b, l, s in zip(boxes, labels, scores):
+			self.boxes.append(Box(b, l, s))
+
 class ClassicDetector():
 	def __init__(
 		self,
 		scaler_path: str,
 		classifier_model_path: str,
-		conf_threshold: float = 0.5,
-		nms_threshold: float = 0.4,
 	):
 		self.scaler = ort.InferenceSession(scaler_path, providers=ort.get_available_providers())
 		self.clf = ort.InferenceSession(classifier_model_path, providers=ort.get_available_providers())
@@ -28,9 +39,6 @@ class ClassicDetector():
 		self.pca = joblib.load('outputs/hog_pca.joblib')
 		self.hog = cv2.HOGDescriptor(self.patch_size, (16, 16), (8, 8), (8, 8), 9)
 		self.ltp = LTP()
-	
-		self.conf_threshold = conf_threshold
-		self.nms_threshold = nms_threshold
 
 	def variance_of_laplacian(self, image):
 		return cv2.Laplacian(image, cv2.CV_64F).var()
@@ -81,25 +89,31 @@ class ClassicDetector():
 		ltp_feat = self.ltp(gray_image, 10)
 		feat.extend(ltp_feat.flatten())
 
-		return np.array(feat)
+		return np.array(feat, dtype=np.float32)
 
-	def __call__(self, image_files: list[str], *args, **kwargs) -> list[
-		object[
-			{
-				'boxes': list[int, int, int, int],
-				'labels': int,
-				'scores': float,
-			}
-		]
-	]:
+	def __call__(self, source, conf=0.5, iou=0.4, *args, **kwargs) -> list[Result]:
 		results = []
+		images = []
+	
+		if isinstance(source, np.ndarray):
+			images = [source]
+		elif isinstance(source, str):
+			images = [cv2.imread(source)]
+		elif isinstance(source, list):
+			for item in source:
+				if isinstance(item, str):
+					images.append(cv2.imread(item))
+				elif isinstance(item, np.ndarray):
+					images.append(item)
 
-		for img_file in image_files:
+		for image in images:
+			if image is None: 
+				results.append([])
+				continue
+		
 			boxes = []
 			labels = []
 			scores = []
-
-			image = cv2.imread(img_file)
 		
 			orig_h, orig_w = image.shape[:2]
 			preprocessed_image = self.preprocess(image)
@@ -123,6 +137,8 @@ class ClassicDetector():
 
 				features = self.extract_features(patch)
 				features = features.reshape(1, -1)
+				features = features.astype(np.float32)
+    
 				scaled_features = self.scaler.run(None, {self.scaler_input_name: features})[0]
 
 				svm_results = self.clf.run(None, {self.clf_input_name: scaled_features})
@@ -130,20 +146,34 @@ class ClassicDetector():
 				cls_id = svm_results[0][0]
 				raw_score = 0.0
 				if len(svm_results) > 1:
-					scores_array = svm_results[1] 
-					if hasattr(scores_array, 'item'):
-						raw_score = scores_array.item()
-					else:
-						raw_score = np.max(scores_array)
+					scores_val = svm_results[1] 
+					if isinstance(scores_val, np.ndarray):
+						if scores_val.size > 1:
+							raw_score = float(np.max(scores_val))
+						else:
+							raw_score = float(scores_val.item())
+									
+					elif isinstance(scores_val, list):
+						if len(scores_val) > 1:
+							raw_score = float(max(scores_val))
+						elif len(scores_val) == 1:
+							raw_score = float(scores_val[0])
 
-				if cls_id != 6 and raw_score > self.conf_threshold:
+				if cls_id != 6 and raw_score > conf:
 					boxes.append([x, y, w, h])
 					labels.append(cls_id)
 					scores.append(float(raw_score))
 
 			final_boxes = []
+			final_labels = []
+			final_scores = []
 			if len(boxes) > 0:
-				indices = cv2.dnn.NMSBoxes(boxes, scores, self.conf_threshold, self.nms_threshold)
+				indices = cv2.dnn.NMSBoxes(boxes, scores, conf, iou)
+
+				if isinstance(indices, tuple):
+					indices = list(indices)
+				elif isinstance(indices, np.ndarray):
+					indices = indices.flatten().tolist()
 
 				for i in indices:
 					idx = i if isinstance(i, int) else i[0]
@@ -153,13 +183,11 @@ class ClassicDetector():
 					x_min, y_min = x, y
 					x_max, y_max = x + w, y + h
 
-					detection = {
-						"bbox": [x_min, y_min, x_max, y_max], 
-						"classId": int(labels[idx]),
-						"score": float(scores[idx])
-					}
 
-					final_boxes.append(detection)
+					final_boxes.append([x_min, y_min, x_max, y_max]) 
+					final_labels.append(int(labels[idx]))
+					final_scores.append(float(scores[idx]))
 
-			results.append(final_boxes)
+			result = Result(final_boxes, final_labels, final_scores)
+			results.append(result)
 		return results
