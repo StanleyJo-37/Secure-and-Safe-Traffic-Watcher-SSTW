@@ -3,8 +3,8 @@ import cv2
 import numpy as np
 import cv2
 import joblib
-from utils.dcp.haze_remover import HazeRemover
-from utils.ltp.ltp import LTP
+from models.utils.dcp.haze_remover import HazeRemover
+from models.utils.ltp.ltp import LTP
 
 class Box():
 	def __init__(self, bbox, label, score):

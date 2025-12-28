@@ -2,4 +2,5 @@
 /**/datasets
 /**/a9_dataset
 /**/yolov8n.pt
-/**/*.pyc
+/**/__pycache__
+/**/*.mp4

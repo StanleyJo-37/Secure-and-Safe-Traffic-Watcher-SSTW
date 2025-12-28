@@ -26,7 +26,7 @@ os.makedirs(TEMP_PROCESSED_VIDEOS_PATH, exist_ok=True)
 
 print("Loading model...")
 try:
-    detector = YOLO('models/weights/best-fp32.onnx')
+    detector = YOLO('models/weights/yolo/best-fp32.onnx', task='detect')
     tracker = SSTWTracker(TEMP_UPLOADED_VIDEOS_PATH, TEMP_PROCESSED_VIDEOS_PATH, detector)
     model_loaded = True
     print("Model loaded successfully!")
@@ -43,13 +43,14 @@ def serve_processed_video(filename):
 def track(task_id: str, upload_filename: str):
     print(f"[{task_id}] Processing started...")
     
-    tracker([upload_filename])
+    _, trakced_vehicles = tracker([upload_filename])
     
     video_url = f"{BASE_URL}/processed/out_{upload_filename}"
     socketio.emit('task_completed', {
         'task_id': task_id,
         'status': 'COMPLETED',
         'video_url': video_url,
+        'tracked_vehicles': trakced_vehicles,
     })
 
 @app.errorhandler(413)
@@ -72,7 +73,9 @@ def upload_video():
     thread = threading.Thread(target=track, args=(task_id, upload_filename))
     thread.start()
     
-    return jsonify({"message": "Uploaded", "task_id": task_id}), 202
+    return jsonify([{"task_id": task_id, "filename": upload_filename}]), 202
+
+print('Server initialized, running now...')
 
 if __name__ == '__main__':
-    socketio.run(debug=True, port=5000)
+    socketio.run(app, debug=True, port=5000)

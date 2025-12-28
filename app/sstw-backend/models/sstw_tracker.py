@@ -26,6 +26,7 @@ class SSTWTracker():
 		
 		self.target_classes = np.arange(7)
 		self.color_palette = {}
+		self.unique_object_ids = set()
 		
 		self.in_dir = in_dir
 		self.out_dir = out_dir
@@ -77,6 +78,7 @@ class SSTWTracker():
 						if not track.is_confirmed(): continue
 						
 						track_id = track.track_id
+						self.unique_object_ids.add(track_id)
 						ltrb = track.to_ltrb()
 						
 						x1, y1, x2, y2 = map(int, ltrb)
@@ -117,9 +119,6 @@ class SSTWTracker():
 					out.write(frame)
 					
 					frame_count += 1
-					
-					if frame_count % 30 == 0:
-						print(f"Processed {frame_count} frames.")
 			except Exception as e:
 				print(f'Error/Interrupted Processing Video {video_path}.')
 				print(f'Reason: {e}')
@@ -132,7 +131,7 @@ class SSTWTracker():
 				out.release()
 				print(f'Video saved to: {output_video_path}')
 				print(f'Total frames processed: {frame_count}')
-    
+		
 			output_paths.append(output_video_path)
 		
-		return output_paths
+		return output_paths, len(self.unique_object_ids)
