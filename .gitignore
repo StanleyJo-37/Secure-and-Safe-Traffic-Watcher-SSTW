@@ -1,3 +1,6 @@
 .env
 /**/datasets
 /**/a9_dataset
+/**/yolov8n.pt
+/**/__pycache__
+/**/*.mp4
