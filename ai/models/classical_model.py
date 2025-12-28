@@ -183,7 +183,6 @@ class ClassicDetector():
 					x_min, y_min = x, y
 					x_max, y_max = x + w, y + h
 
-
 					final_boxes.append([x_min, y_min, x_max, y_max]) 
 					final_labels.append(int(labels[idx]))
 					final_scores.append(float(scores[idx]))

@@ -26,9 +26,6 @@ def compute_iou(box1, box2):
   iou = intersection_area / union_area
   return iou
 
-def mean_average_precision(tp, fp, fn):
-  
-
 def get_eval(
   model: nn.Module,
   test_dataset: DataLoader,
