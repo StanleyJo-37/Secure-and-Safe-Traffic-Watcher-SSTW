@@ -4,3 +4,6 @@
 /**/yolov8n.pt
 /**/__pycache__
 /**/*.mp4
+/**/*.dll
+/**/*.npy
+/**/*.npz
