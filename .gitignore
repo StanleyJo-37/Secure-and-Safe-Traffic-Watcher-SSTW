@@ -1,3 +1,9 @@
 .env
-/datasets/
-testing.py
+/**/datasets
+/**/a9_dataset
+/**/yolov8n.pt
+/**/__pycache__
+/**/*.dll
+/**/*.npy
+/**/*.npz
+ai/**/*.mp4
