@@ -3,4 +3,7 @@
 /**/a9_dataset
 /**/yolov8n.pt
 /**/__pycache__
-/**/*.mp4
+/**/*.dll
+/**/*.npy
+/**/*.npz
+ai/**/*.mp4
