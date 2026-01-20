@@ -7,8 +7,8 @@ Currently, SSTW employs YOLOv8n as our main detector with DeepSORT as the tracke
 <h2>Directory</h2>
 - /ai/ -> AI Development.<br/>
 - /app/ -> Frontend and backend development and codebase.<br/>
-- /documentation/ -> Directory for documentations on SSTW.<br/>
+- /documentations/ -> Directory for documentations on SSTW.<br/>
 
 <h2>Results</h2>
-![Classical Detector Result](documentations/images/Classical_Detector.png)<br/>
-![YOLO Detector Result](documentations/images/YOLO.png)<br/>
+![Classical Detector Result](documentations/images/Classical_Detector.png) <br/>
+![YOLO Detector Result](documentations/images/YOLO.png) <br/>
