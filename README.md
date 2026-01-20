@@ -5,10 +5,10 @@ SSTW is a software that integrates AI with software construct and a future outlo
 Currently, SSTW employs YOLOv8n as our main detector with DeepSORT as the tracker. We experimented with a two-stage classical detector resembling the original R-CNN architecture although the result was not satisfactory with low FPS and detector performance.
 
 <h2>Directory</h2>
-- /ai/ -> AI Development.
-- /app/ -> Frontend and backend development and codebase.
-- /documentation/ -> Directory for documentations on SSTW.
+- /ai/ -> AI Development.<br/>
+- /app/ -> Frontend and backend development and codebase.<br/>
+- /documentation/ -> Directory for documentations on SSTW.<br/>
 
 <h2>Results</h2>
-![Classical Detector Result](documentations/images/Classical%20Detector.png)
-![YOLO Detector Result](documentations/images/YOLO.png)
+![Classical Detector Result](documentations/images/Classical_Detector.png)<br/>
+![YOLO Detector Result](documentations/images/YOLO.png)<br/>
